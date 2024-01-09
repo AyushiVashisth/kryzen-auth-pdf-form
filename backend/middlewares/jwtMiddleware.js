@@ -19,7 +19,6 @@ const jwtMiddleware = async (req, res, next) => {
       dealerId: user._id,
       fullName: user.fullName,
     };
-    // console.log("user", user)
 
     next();
   } catch (error) {

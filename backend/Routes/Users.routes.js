@@ -56,7 +56,7 @@ userRouter.post("/login", async (req, res) => {
             process.env.JWT_SECRET_KEY,
             { expiresIn }
           );
-          res.status(200).send({ message: "Login successful", token: token });
+          res.status(200).send({ message: "Login successful", token: token, user: user.fullName });
         } else {
           res.status(401).send({
             message:
