@@ -1,17 +1,20 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { FaSpinner } from "react-icons/fa";
+import { AuthContext } from "../Context/AuthContextProvider";
 
 function LoginAndSignUp() {
   const [isSignIn, setIsSignIn] = useState(false);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   //   console.log(setShowPassword)
+
+  const { isAuth, setToken, setIsAuth, setFullName } =
+    React.useContext(AuthContext);
 
   const [userDetails, setDetails] = useState({
     fullName: "",
@@ -55,9 +58,17 @@ function LoginAndSignUp() {
           toast.success("Login successful", {
             position: "top-right"
           });
-          console.log("form", response.data);
-          localStorage.setItem("token", response.data.token);
-          localStorage.setItem("fullName", response.data.user);
+          console.log("form", response.data.token);
+          setToken(response.data.token);
+          sessionStorage.setItem("isAuth", true);
+          toast({
+            title: response.data?.message,
+            status: "success",
+            duration: 3000,
+            isClosable: true
+          });
+          if (response.data.token) setIsAuth(true);
+          setFullName(response.data.user);
           navigate("/form");
         } catch (error) {
           toast.error("Login failed. Please check your credentials.");
@@ -79,8 +90,8 @@ function LoginAndSignUp() {
             });
             handleToggleSignIn(true);
           } catch (error) {
-            toast.error("Signup failed. Please try again.",{
-              position:"top-right"
+            toast.error("Signup failed. Please try again.", {
+              position: "top-right"
             });
           }
         } else {
@@ -102,6 +113,10 @@ function LoginAndSignUp() {
   const handleToggleSignIn = () => {
     setIsSignIn(!isSignIn);
   };
+
+  if (isAuth) {
+    return <Navigate to="/form" />;
+  }
 
   return (
     <>

@@ -30,7 +30,7 @@ formRouter.post("/", upload, async (req, res) => {
     const { age, address } = req.body;
     const userId = req.user.dealerId;
     const fullName = req.user.fullName;
-    console.log(age, address, userId, fullName, req.body);
+    console.log(age, address, userId, fullName);
 
     if (!age || !address) {
       return res.status(400).json({

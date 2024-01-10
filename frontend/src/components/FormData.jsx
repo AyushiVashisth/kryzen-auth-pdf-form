@@ -4,9 +4,9 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaSpinner } from "react-icons/fa";
+import { AuthContext } from "../Context/AuthContextProvider";
 
 const FormComponent = () => {
-  const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [address, setAddress] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -15,10 +15,7 @@ const FormComponent = () => {
   const [isSubmitLoading, setIsSubmitLoading] = useState(false);
   const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
-  useEffect(() => {
-    const storedFullName = localStorage.getItem("fullName");
-    setFullName(storedFullName);
-  }, []);
+  const { token, fullName } = React.useContext(AuthContext);
 
   useEffect(() => {
     setIsFormFilled(Boolean(fullName && age && address && photo));
@@ -34,19 +31,13 @@ const FormComponent = () => {
     formData.append("address", address);
     formData.append("photo", photo);
 
-    const token = localStorage.getItem("token");
-
     try {
-      let response = await axios.post(
-        "https://kryzen-api.onrender.com/form/",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data"
-          }
+      let response = await axios.post("https://kryzen-api.onrender.com/form/", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
         }
-      );
+      });
 
       setFormId(response.data.formData._id);
 
@@ -66,7 +57,6 @@ const FormComponent = () => {
     setIsDownloadLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
       const response = await axios.get(
         `https://kryzen-api.onrender.com/form/pdf/${formId}`,
         {
