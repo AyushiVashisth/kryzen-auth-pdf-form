@@ -16,7 +16,7 @@ app.use(
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.status(200).send("Welcome to Headline backend api");
+  res.status(200).send("Welcome to kryzen-auth-pdf-form backend api");
 });
 
 app.use("/user", userRouter);
