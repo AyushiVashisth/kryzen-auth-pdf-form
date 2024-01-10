@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { FaSpinner } from "react-icons/fa";
 
 const FormComponent = () => {
   const [fullName, setFullName] = useState("");
@@ -10,14 +11,23 @@ const FormComponent = () => {
   const [address, setAddress] = useState("");
   const [photo, setPhoto] = useState(null);
   const [formId, setFormId] = useState(null);
+  const [isFormFilled, setIsFormFilled] = useState(false);
+  const [isSubmitLoading, setIsSubmitLoading] = useState(false);
+  const [isDownloadLoading, setIsDownloadLoading] = useState(false);
 
   useEffect(() => {
     const storedFullName = localStorage.getItem("fullName");
     setFullName(storedFullName);
   }, []);
 
+  useEffect(() => {
+    setIsFormFilled(Boolean(fullName && age && address && photo));
+  }, [fullName, age, address, photo]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setIsSubmitLoading(true);
 
     const formData = new FormData();
     formData.append("age", age);
@@ -27,39 +37,50 @@ const FormComponent = () => {
     const token = localStorage.getItem("token");
 
     try {
-      let response = await axios.post("http://localhost:8080/form/", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      let response = await axios.post(
+        "https://kryzen-api.onrender.com/form/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data"
+          }
+        }
+      );
 
       setFormId(response.data.formData._id);
 
       toast.success("Form submitted successfully", {
-        position: toast.POSITION.TOP_CENTER,
+        position: "top-right"
       });
     } catch (error) {
       toast.error("Error submitting form", {
-        position: toast.POSITION.TOP_CENTER,
+        position: "top-right"
       });
+    } finally {
+      setIsSubmitLoading(false);
     }
   };
 
   const handleDownloadPDF = async () => {
+    setIsDownloadLoading(true);
+
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`http://localhost:8080/form/pdf/${formId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: 'arraybuffer',
-      });
-  
-      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const response = await axios.get(
+        `https://kryzen-api.onrender.com/form/pdf/${formId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          responseType: "arraybuffer"
+        }
+      );
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-  
-      const a = document.createElement('a');
+
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${fullName} form.pdf`;
       document.body.appendChild(a);
@@ -68,18 +89,26 @@ const FormComponent = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       toast.error("Error downloading PDF", {
-        position: toast.POSITION.TOP_CENTER,
+        position: "top-right"
       });
+    } finally {
+      setIsDownloadLoading(false);
     }
   };
-  
 
   return (
-    <div className="flex justify-center items-center h-screen bg-cover bg-center" style={{ backgroundImage: `url("https://images.jdmagicbox.com/comp/pune/l2/020pxx20.xx20.221129084005.u8l2/catalogue/kryzen-biotech-private-limited-wakad-pune-greenhouse-manufacturers-i0elbx7owu.jpg")` }}>
+    <div
+      className="flex justify-center items-center h-screen bg-cover bg-center"
+      style={{
+        backgroundImage: `url("https://images.jdmagicbox.com/comp/pune/l2/020pxx20.xx20.221129084005.u8l2/catalogue/kryzen-biotech-private-limited-wakad-pune-greenhouse-manufacturers-i0elbx7owu.jpg")`
+      }}
+    >
       <form className="bg-[#155524] rounded-lg shadow-lg px-8 py-10 w-96 text-white">
         <h2 className="text-3xl mb-6 font-bold">Form Fill</h2>
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-left mb-2">Full Name</label>
+          <label className="block text-sm font-semibold text-left mb-2">
+            Full Name
+          </label>
           <input
             type="text"
             readOnly
@@ -88,7 +117,9 @@ const FormComponent = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-semibold mb-2 text-left">Age</label>
+          <label className="block text-sm font-semibold mb-2 text-left">
+            Age
+          </label>
           <input
             type="number"
             placeholder="Enter your age"
@@ -98,7 +129,9 @@ const FormComponent = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-semibold mb-2 text-left">Address</label>
+          <label className="block text-sm font-semibold mb-2 text-left">
+            Address
+          </label>
           <input
             type="text"
             placeholder="Enter your address"
@@ -108,7 +141,9 @@ const FormComponent = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-semibold mb-2 text-left">Photo</label>
+          <label className="block text-sm font-semibold mb-2 text-left">
+            Photo
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -118,19 +153,39 @@ const FormComponent = () => {
         </div>
         <div className="flex justify-center">
           <button
-            className="bg-green-950 w-full hover:bg-green-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className={`bg-green-950 w-full hover:bg-green-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+              !isFormFilled && "opacity-50 cursor-not-allowed"
+            }`}
             type="button"
             onClick={handleSubmit}
+            disabled={!isFormFilled || isSubmitLoading}
           >
-            Submit
+            {isSubmitLoading ? (
+              <span className="flex items-center justify-center text-sm">
+                <FaSpinner className="animate-spin mr-2" />
+                Submitting...
+              </span>
+            ) : (
+              "Submit"
+            )}
           </button>
           {formId && (
             <button
-              className="bg-red-700 w-full mx-3 hover:bg-red-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className={`bg-red-700 w-full mx-3 hover:bg-red-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${
+                isDownloadLoading && "opacity-50 cursor-not-allowed"
+              }`}
               type="button"
               onClick={handleDownloadPDF}
+              disabled={isDownloadLoading}
             >
-              Download PDF
+              {isDownloadLoading ? (
+                <span className="flex items-center justify-center text-sm">
+                  <FaSpinner className="animate-spin mr-2" />
+                  Downloading...
+                </span>
+              ) : (
+                "Download PDF"
+              )}
             </button>
           )}
         </div>

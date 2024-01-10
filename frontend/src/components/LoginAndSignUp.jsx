@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
+import { FaSpinner } from "react-icons/fa";
 
 function LoginAndSignUp() {
   const [isSignIn, setIsSignIn] = useState(false);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
-  console.log(setShowPassword)
+  //   console.log(setShowPassword)
 
   const [userDetails, setDetails] = useState({
     fullName: "",
@@ -25,9 +28,7 @@ function LoginAndSignUp() {
   };
 
   const isAllPresent = (str) => {
-    var pattern = new RegExp(
-      "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[-+_!@#$%^&*.,?]).+$"
-    );
+    var pattern = new RegExp("^(?=.*[a-z])(?=.*\\d)(?=.*[-+_!@#$%^&*.,?]).+$");
 
     if (!str || str.length === 0) {
       return false;
@@ -38,7 +39,6 @@ function LoginAndSignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (isSignIn) {
       if (!userDetails.password) {
         return toast.error("Please fill the password");
@@ -46,12 +46,14 @@ function LoginAndSignUp() {
         return toast.error("Please fill the email");
       } else {
         try {
+          setIsLoading(true);
+
           let response = await axios.post(
-            "http://localhost:8080/user/login",
+            "https://kryzen-api.onrender.com/user/login",
             userDetails
           );
           toast.success("Login successful", {
-            position: "top-center"
+            position: "top-right"
           });
           console.log("form", response.data);
           localStorage.setItem("token", response.data.token);
@@ -59,6 +61,8 @@ function LoginAndSignUp() {
           navigate("/form");
         } catch (error) {
           toast.error("Login failed. Please check your credentials.");
+        } finally {
+          setIsLoading(false);
         }
       }
     } else {
@@ -66,25 +70,31 @@ function LoginAndSignUp() {
         if (userDetails.fullName && userDetails.email) {
           try {
             await axios.post(
-              "http://localhost:8080/user/registor",
+              "https://kryzen-api.onrender.com/user/registor",
               userDetails
             );
+            console.log(userDetails);
             toast.success("Successfully Registered user", {
-              position: "top-center"
+              position: "top-right"
             });
             handleToggleSignIn(true);
           } catch (error) {
-            toast.error("Signup failed. Please try again.");
+            toast.error("Signup failed. Please try again.",{
+              position:"top-right"
+            });
           }
         } else {
           return toast.error("Please fill all the details", {
-            position: "top"
+            position: "top-right"
           });
         }
       } else {
-        return toast.error("Please recheck your password", {
-          position: "top"
-        });
+        return toast.error(
+          "Password should include an uppercase and lowercase alphabet, a number, and a special character.",
+          {
+            position: "top-right"
+          }
+        );
       }
     }
   };
@@ -162,11 +172,17 @@ function LoginAndSignUp() {
             </p>
             <div className="flex justify-end">
               <button
-                loadingText="Submitting"
                 type="submit"
                 className="px-4 py-2 text-white bg-green-600 hover:bg-green-950 rounded-md w-full"
+                disabled={isLoading}
               >
-                {isSignIn ? "Login" : "Sign Up"}
+                {isLoading && (
+                  <span className="flex items-center justify-center">
+                    <FaSpinner className="animate-spin mr-2" />
+                    Submitting...
+                  </span>
+                )}
+                {!isLoading && (isSignIn ? "Login" : "Sign Up")}
               </button>
             </div>
             <div className="mt-4 text-center">
